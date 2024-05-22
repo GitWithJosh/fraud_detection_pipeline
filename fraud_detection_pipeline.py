@@ -98,12 +98,12 @@ class CreditCardFraudDetector:
         plt.show()
         print("Confusion matrix visualized.")
 
-# Example usage:
-detector = CreditCardFraudDetector('./creditcard_2023.csv')
-detector.load_data()
-detector.split_data()
-detector.preprocess_data()
-detector.train_model()
-detector.evaluate_model()
-#detector.visualize_data()
-detector.visualize_confusion_matrix()
+if __name__ == '__main__':
+    # Example usage
+    detector = CreditCardFraudDetector('./creditcard_2023.csv')
+    detector.load_data()
+    detector.split_data()
+    detector.preprocess_data()
+    detector.train_model()
+    detector.evaluate_model()
+    detector.visualize_confusion_matrix()
