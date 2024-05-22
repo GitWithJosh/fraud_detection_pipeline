@@ -21,32 +21,32 @@ class CreditCardFraudDetector:
         self.scaler = StandardScaler()
         
     def load_data(self):
-        print("Loading data...")
+        logging.info("Loading data...")
         data = pd.read_csv(self.data_path)
         self.X = data.drop('Class', axis=1)
         self.y = data['Class']
-        print("Data loaded.")
+        logging.info("Data loaded.")
         
     def split_data(self, test_size=0.2, random_state=42):
-        print("Splitting data...")
+        logging.info("Splitting data...")
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(self.X, self.y, test_size=test_size, random_state=random_state)
-        print("Data splitted.")
+        logging.info("Data splitted.")
         
     def preprocess_data(self):
-        print("Preprocessing data...")
+        logging.info("Preprocessing data...")
         self.X_train = self.scaler.fit_transform(self.X_train)
         self.X_test = self.scaler.transform(self.X_test)
-        print("Data preprocessed.")
+        logging.info("Data preprocessed.")
         
     def train_model(self, n_estimators=50, random_state=42):
-        print("Training model...")
+        logging.info("Training model...")
         self.model = RandomForestClassifier(n_estimators=n_estimators, random_state=random_state)
         self.model.fit(self.X_train, self.y_train)
-        print("Model trained.")
+        logging.info("Model trained.")
 
         
     def evaluate_model(self):
-        print("Evaluating model...")
+        logging.info("Evaluating model...")
         y_pred = self.model.predict(self.X_test)
         accuracy = accuracy_score(self.y_test, y_pred)
         precision = precision_score(self.y_test, y_pred)
@@ -54,12 +54,12 @@ class CreditCardFraudDetector:
         f1 = f1_score(self.y_test, y_pred)
         roc_auc = roc_auc_score(self.y_test, y_pred)
 
-        print("Model evaluation results:")
-        print("Accuracy:", accuracy)
-        print("Precision:", precision)
-        print("Recall:", recall)
-        print("F1 Score:", f1)
-        print("ROC AUC Score:", roc_auc)
+        logging.info("Model evaluation results: \n",
+                    f"Accuracy: {accuracy}\n",
+                    f"Precision: {precision}\n",
+                    f"Recall: {recall}\n",
+                    f"F1 Score: {f1}\n",
+                    f"ROC AUC Score: {roc_auc}\n")
 
         
     def visualize_data(self, sample_size=1000):
@@ -87,7 +87,7 @@ class CreditCardFraudDetector:
         plt.show()
         
     def visualize_confusion_matrix(self):
-        print("Visualizing confusion matrix...")
+        logging.info("Visualizing confusion matrix...")
         y_pred = self.model.predict(self.X_test)
         cm = confusion_matrix(self.y_test, y_pred)
         
@@ -97,7 +97,7 @@ class CreditCardFraudDetector:
         plt.xlabel('Predicted Label')
         plt.ylabel('True Label')
         plt.show()
-        print("Confusion matrix visualized.")
+        logging.info("Confusion matrix visualized.")
 
 def main():
     # Example usage
