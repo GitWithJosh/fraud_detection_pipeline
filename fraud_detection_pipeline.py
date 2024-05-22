@@ -1,3 +1,5 @@
+import logging
+
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -7,7 +9,6 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
-# https://www.kaggle.com/datasets/nelgiriyewithana/credit-card-fraud-detection-dataset-2023/data?select=creditcard_2023.csv
 
 class CreditCardFraudDetector:
     def __init__(self, data_path):
@@ -98,7 +99,7 @@ class CreditCardFraudDetector:
         plt.show()
         print("Confusion matrix visualized.")
 
-if __name__ == '__main__':
+def main():
     # Example usage
     detector = CreditCardFraudDetector('./creditcard_2023.csv')
     detector.load_data()
@@ -107,3 +108,10 @@ if __name__ == '__main__':
     detector.train_model()
     detector.evaluate_model()
     detector.visualize_confusion_matrix()
+
+if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+    try:
+        main()
+    except Exception as e:
+        logging.error(e)
