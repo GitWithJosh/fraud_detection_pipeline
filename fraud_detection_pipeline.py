@@ -40,11 +40,7 @@ class CreditCardFraudDetector:
     def train_model(self, n_estimators=50, random_state=42):
         print("Training model...")
         self.model = RandomForestClassifier(n_estimators=n_estimators, random_state=random_state)
-        for epoch in range(1, n_estimators + 1):
-            self.model.n_estimators = epoch
-            self.model.fit(self.X_train, self.y_train)
-            if epoch % 10 == 0:
-                print(f"Epoch {epoch} trained.")
+        self.model.fit(self.X_train, self.y_train)
         print("Model trained.")
 
         
