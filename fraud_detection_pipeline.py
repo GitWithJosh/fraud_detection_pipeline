@@ -1,4 +1,5 @@
 import logging
+import argparse
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -110,7 +111,9 @@ def main():
     detector.visualize_confusion_matrix()
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+    logging.basicConfig(level=logging.INFO, 
+                        format='%(asctime)s %(levelname)s: %(message)s',
+                        datefmt='%H:%M:%S')
     try:
         main()
     except Exception as e:
