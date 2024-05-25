@@ -1,4 +1,5 @@
 import logging
+import os
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -14,6 +15,8 @@ from sklearn.metrics import (
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
+from skl2onnx import to_onnx
+from onnxruntime import InferenceSession
 
 
 class Data_Processor:
@@ -70,14 +73,14 @@ class ModelTrainer:
 
 
 class ModelEvaluator:
-    def __init__(self, model, x_test, y_test) -> None:
+    def __init__(self, model: InferenceSession, x_test, y_test) -> None:
         self.model = model
         self.x_test = x_test
         self.y_test = y_test
 
     def evaluate_model(self) -> None:
         logging.info("Evaluating model...")
-        y_pred = self.model.predict(self.x_test)
+        y_pred = self.model.run(None, {"X": self.x_test})[0]
         accuracy = accuracy_score(self.y_test, y_pred)
         precision = precision_score(self.y_test, y_pred)
         recall = recall_score(self.y_test, y_pred)
@@ -95,7 +98,7 @@ class ModelEvaluator:
 
     def visualize_confusion_matrix(self) -> None:
         logging.info("Visualizing confusion matrix...")
-        y_pred = self.model.predict(self.x_test)
+        y_pred = self.model.run(None, {"X": self.x_test})[0]
         cm = confusion_matrix(self.y_test, y_pred)
 
         plt.figure(figsize=(8, 6))
@@ -105,16 +108,33 @@ class ModelEvaluator:
         plt.ylabel("True Label")
         plt.show()
         logging.info("Confusion matrix visualized.")
+        
+    def get_prediction(self, data) -> int:
+        logging.info("Predicting...")
+        prediction = self.model.run(None, {"X": data})[0]
+        logging.info(f"Prediction: {prediction}")
+        return prediction
 
 
 def main():
     # Example usage
     data_processor = Data_Processor("./creditcard_2023.csv", test_split=0.2)
     x_train, x_test, y_train, y_test = data_processor.process_data()
-    detector = ModelTrainer(x_train, y_train)
-    model = detector.train_model()
+    if not os.path.exists("model.onnx"):
+        detector = ModelTrainer(x_train, y_train)
+        model = detector.train_model()
+        # Save the model in a onnx file
+        onnx_model = to_onnx(model, x_train)
+        with open("model.onnx", "wb") as f:
+            f.write(onnx_model.SerializeToString())
+    else:
+        with open("model.onnx", "rb") as f:
+            model = InferenceSession(f.read())
     evaluator = ModelEvaluator(model, x_test, y_test)
     evaluator.evaluate_model()
+    pred = evaluator.get_prediction(x_test[0:1])[0]
+    actual = y_test.iloc[0]
+    print(f"Prediction: {pred} Actual: {actual}")
 
 
 if __name__ == "__main__":
