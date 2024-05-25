@@ -19,7 +19,7 @@ from skl2onnx import to_onnx
 from onnxruntime import InferenceSession
 
 
-class Data_Processor:
+class DataProcessor:
     def __init__(self, data_path, test_split=0.2) -> None:
         self.data_path = data_path
         self.x_train = None
@@ -153,7 +153,7 @@ class ModelManager:
 
 def main():
     # Example usage
-    data_processor = Data_Processor("./creditcard_2023.csv", test_split=0.2)
+    data_processor = DataProcessor("./creditcard_2023.csv", test_split=0.2)
     x_train, x_test, y_train, y_test = data_processor.process_data()
     model_manager = ModelManager("model.onnx")
     
