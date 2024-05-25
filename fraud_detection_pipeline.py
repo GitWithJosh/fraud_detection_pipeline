@@ -108,31 +108,69 @@ class ModelEvaluator:
         plt.ylabel("True Label")
         plt.show()
         logging.info("Confusion matrix visualized.")
-        
+
+class ModelManager:
+    def __init__(self, model_path) -> None:
+        self.model_path = model_path
+        self.model = None
+    
+    def save_model(self, model, x_train) -> bool:
+        logging.info("Saving model...")
+        onnx_model = to_onnx(model, x_train)
+        try:
+            with open(self.model_path, "wb") as f:
+                f.write(onnx_model.SerializeToString())
+        except Exception as e:
+            logging.exception(e)
+            return False
+        logging.info("Model saved.")
+        return True
+    
+    def load_model(self) -> bool:
+        logging.info("Loading model...")
+        try:
+            with open(self.model_path, "rb") as f:
+                self.model = InferenceSession(f.read())
+        except Exception as e:
+            logging.exception(e)
+            return False
+        logging.info("Model loaded.")
+        return True
+    
     def get_prediction(self, data) -> int:
         logging.info("Predicting...")
-        prediction = self.model.run(None, {"X": data})[0]
+        try:
+            prediction = self.model.run(None, {"X": data})[0]
+        except Exception as e:
+            logging.exception(e)
+            return None
         logging.info(f"Prediction: {prediction}")
         return prediction
-
+    
+    def get_model(self) -> InferenceSession:
+        return self.model
+    
 
 def main():
     # Example usage
     data_processor = Data_Processor("./creditcard_2023.csv", test_split=0.2)
     x_train, x_test, y_train, y_test = data_processor.process_data()
-    if not os.path.exists("model.onnx"):
+    model_manager = ModelManager("model.onnx")
+    
+    if not model_manager.load_model():
         detector = ModelTrainer(x_train, y_train)
         model = detector.train_model()
         # Save the model in a onnx file
-        onnx_model = to_onnx(model, x_train)
-        with open("model.onnx", "wb") as f:
-            f.write(onnx_model.SerializeToString())
+        model_manager.save_model(model, x_train)
     else:
-        with open("model.onnx", "rb") as f:
-            model = InferenceSession(f.read())
+        model_manager.get_prediction(x_test[0:1])
+        model = model_manager.get_model()
+    
     evaluator = ModelEvaluator(model, x_test, y_test)
     evaluator.evaluate_model()
-    pred = evaluator.get_prediction(x_test[0:1])[0]
+    evaluator.visualize_confusion_matrix()
+    
+    pred = model_manager.get_prediction(x_test[0:1])[0]
     actual = y_test.iloc[0]
     print(f"Prediction: {pred} Actual: {actual}")
 
