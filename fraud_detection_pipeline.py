@@ -261,8 +261,8 @@ class ModelManager:
         try:
             with open(self.model_path, "rb") as f:
                 self.model = InferenceSession(f.read())
-        except Exception as e:
-            logging.exception(e)
+        except:
+            logging.info("Model not found.")
             return False
         logging.info("Model loaded.")
         return True
