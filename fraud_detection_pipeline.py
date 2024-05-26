@@ -133,7 +133,7 @@ class ModelTrainer:
             RandomForestClassifier: The trained random forest classifier model.
 
         """
-        logging.info("Training model...")
+        logging.info("Training model, this may take a while...")
         self.model = RandomForestClassifier(
             n_estimators=n_estimators, random_state=random_state
         )

@@ -1,5 +1,6 @@
 from fraud_detection_pipeline import DataProcessor, ModelTrainer, ModelEvaluator, ModelManager
 
+import logging
 class FraudDetectionService:
     """
     A class that represents a fraud detection service.
@@ -23,17 +24,17 @@ class FraudDetectionService:
         """
         self.model_manager = ModelManager(model_path)
         self.data_processor = DataProcessor("./creditcard_2023.csv", test_split=0.2)
-        self.model = self._load_model_()
         (
             self.x_train, 
             self.x_test, 
             self.y_train, 
             self.y_test
         ) = self.data_processor.process_data()
-        self.model_trainer = ModelTrainer(self.x_train, self.y_train)
+        self.model_trainer = ModelTrainer(self.x_train, self.y_train) 
+        self.load_model()
         self.model_evaluator = ModelEvaluator(self.model, self.x_test, self.y_test)
         
-    def _load_model_(self) -> None:
+    def load_model(self) -> None:
         """
         Loads the trained model.
 
@@ -66,3 +67,15 @@ class FraudDetectionService:
             int: The predicted class label.
         """
         return self.model_manager.get_prediction(data)
+    
+if __name__ == "__main__":
+    # Test the FraudDetectionService class
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s: %(message)s",
+        datefmt="%H:%M:%S",
+    )
+    fds = FraudDetectionService("model.onnx")
+    fds.load_model()
+    fds.evaluate_model()
+    fds.get_prediction(fds.x_test[0:1])
