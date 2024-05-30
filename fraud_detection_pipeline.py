@@ -297,6 +297,9 @@ class ModelManager:
     
 
 def main():
+    """
+    The main function that demonstrates the fraud detection pipeline.
+    """
     # Example usage
     data_processor = DataProcessor("./creditcard_2023.csv", test_split=0.2)
     x_train, x_test, y_train, y_test = data_processor.process_data()
@@ -321,6 +324,11 @@ def main():
 
 
 if __name__ == "__main__":
+    """
+    If __name__ == "__main__": is used to check whether the current script is run as the main program.
+    If the script is imported as a module in another script, the block of code under if __name__ == "__main__": will not run.
+    If the script is run directly, the block of code under if __name__ == "__main__": will run.
+    """
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s %(levelname)s: %(message)s",
