@@ -303,7 +303,7 @@ def main():
     # Example usage
     data_processor = DataProcessor("./creditcard_2023.csv", test_split=0.2)
     x_train, x_test, y_train, y_test = data_processor.process_data()
-    model_manager = ModelManager("model.onnx")
+    model_manager = ModelManager("./model.onnx")
     
     if not model_manager.load_model():
         detector = ModelTrainer(x_train, y_train)
