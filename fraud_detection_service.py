@@ -78,7 +78,6 @@ if __name__ == "__main__":
     )
 
     fds = FraudDetectionService("model.onnx")
-    fds.load_model()
     fds.evaluate_model()
 
     # Example transaction data to add // This transaction is not fraudulent
