@@ -1,0 +1,4 @@
+- requirements.txt (für Bibliotheken etc.)
+- gui mit streamlit
+- visualisierungen des modells
+- code übersichtlicher (eventuell aufteilen in mehrere Files)
