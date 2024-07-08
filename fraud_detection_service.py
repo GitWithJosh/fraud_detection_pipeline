@@ -1,20 +1,48 @@
-from fraud_detection_pipeline import DataProcessor, ModelTrainer, ModelEvaluator, ModelManager
+from fraud_detection_pipeline import (
+    DataProcessor, ModelTrainer, ModelEvaluator, ModelManager
+)
 import pandas as pd
 import numpy as np
 import logging
 
+
 class CreditCard:
-    def __init__(self):
+    """
+    A class to represent a credit card with transactions.
+
+    Attributes:
+        transactions (list): A list of transactions.
+    """
+
+    def __init__(self) -> None:
         self.transactions = []
 
-    def add_transaction(self, transaction):
+    def add_transaction(self, transaction: dict) -> None:
         self.transactions.append(transaction)
 
-    def get_transactions(self):
+    def get_transactions(self) -> list:
         return self.transactions
 
+
 class FraudDetectionService:
-    def __init__(self, model_path) -> None:
+    """
+    A class to represent a fraud detection service.
+    This class serves as an interface to the fraud detection pipeline.
+
+    Attributes:
+        model_manager (ModelManager): An instance of the ModelManager class.
+        data_processor (DataProcessor): An instance of the DataProcessor class.
+        x_train (numpy.ndarray): Training features.
+        x_test (numpy.ndarray): Testing features.
+        y_train (numpy.ndarray): Training labels.
+        y_test (numpy.ndarray): Testing labels.
+        model_trainer (ModelTrainer): An instance of the ModelTrainer class.
+        model (object): A trained model.
+        model_evaluator (ModelEvaluator): An instance of the ModelEvaluator class.
+        credit_card (CreditCard): An instance of the CreditCard class.
+    """
+
+    def __init__(self, model_path: str) -> None:
         self.model_manager = ModelManager(model_path)
         self.data_processor = DataProcessor("./creditcard_2023.csv", test_split=0.2)
         (
@@ -39,7 +67,7 @@ class FraudDetectionService:
     def evaluate_model(self) -> None:
         self.model_evaluator.evaluate_model()
 
-    def add_transaction_and_evaluate(self, transaction_data) -> int:
+    def add_transaction_and_evaluate(self, transaction_data: dict) -> int:
         transaction_df = pd.DataFrame([transaction_data])
         self.credit_card.add_transaction(transaction_df.iloc[0])
 
@@ -52,7 +80,7 @@ class FraudDetectionService:
         prediction = self.get_prediction(input_data)
         return prediction
 
-    def get_prediction(self, data) -> int:
+    def get_prediction(self, data: dict) -> int:
         # Ensure input data is in the expected format
         if isinstance(data, dict):
             input_data = data.get('X')  # Extract 'X' from the dictionary
@@ -66,7 +94,6 @@ class FraudDetectionService:
             raise ValueError("Input data must be provided as a dictionary.")
 
         return prediction
-
 
 
 if __name__ == "__main__":

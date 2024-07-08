@@ -1,15 +1,10 @@
 import logging
-
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import (
-    confusion_matrix,
-    accuracy_score,
-    precision_score,
-    recall_score,
-    f1_score,
-    roc_auc_score,
+    confusion_matrix, accuracy_score, precision_score, recall_score, 
+    f1_score, roc_auc_score
 )
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
@@ -21,10 +16,6 @@ from onnxruntime import InferenceSession
 class DataProcessor:
     """
     A class that processes data for fraud detection pipeline.
-
-    Args:
-        data_path (str): The path to the data file.
-        test_split (float, optional): The proportion of data to be used for testing. Defaults to 0.2.
 
     Attributes:
         data_path (str): The path to the data file.
@@ -40,10 +31,9 @@ class DataProcessor:
         load_data: Loads the data from the specified file path.
         split_data: Splits the data into training and testing sets.
         preprocess_data: Preprocesses the data using a scaler.
-
     """
 
-    def __init__(self, data_path, test_split=0.2) -> None:
+    def __init__(self, data_path: str, test_split: float = 0.2) -> None:
         self.data_path = data_path
         self.x_train = None
         self.x_test = None
@@ -58,7 +48,6 @@ class DataProcessor:
 
         Returns:
             tuple: A tuple containing the training and testing data features and labels.
-
         """
         self.load_data()
         self.split_data()
@@ -68,7 +57,6 @@ class DataProcessor:
     def load_data(self) -> None:
         """
         Loads the data from the specified file path.
-
         """
         logging.info("Loading data...")
         data = pd.read_csv(self.data_path)
@@ -79,18 +67,16 @@ class DataProcessor:
     def split_data(self) -> None:
         """
         Splits the data into training and testing sets.
-
         """
         logging.info("Splitting data...")
-        (self.x_train, self.x_test, self.y_train, self.y_test) = train_test_split(
+        self.x_train, self.x_test, self.y_train, self.y_test = train_test_split(
             self.X, self.y, test_size=self.test_split, random_state=42
         )
-        logging.info("Data splitted.")
+        logging.info("Data split.")
 
     def preprocess_data(self) -> None:
         """
         Preprocesses the data using a scaler.
-
         """
         logging.info("Preprocessing data...")
         self.x_train = self.scaler.fit_transform(self.x_train)
@@ -113,7 +99,6 @@ class ModelTrainer:
 
     Methods:
         train_model: Trains the machine learning model.
-
     """
 
     def __init__(self, x_train, y_train) -> None:
@@ -121,7 +106,7 @@ class ModelTrainer:
         self.x_train = x_train
         self.y_train = y_train
 
-    def train_model(self, n_estimators=50, random_state=42) -> RandomForestClassifier:
+    def train_model(self, n_estimators: int = 50, random_state: int = 42) -> RandomForestClassifier:
         """
         Trains the machine learning model.
 
@@ -131,7 +116,6 @@ class ModelTrainer:
 
         Returns:
             RandomForestClassifier: The trained random forest classifier model.
-
         """
         logging.info("Training model, this may take a while...")
         self.model = RandomForestClassifier(
@@ -177,12 +161,12 @@ class ModelEvaluator:
         roc_auc = roc_auc_score(self.y_test, y_pred)
 
         logging.info(
-            f"Model evaluation results: \n"
+            f"Model evaluation results:\n"
             f"Accuracy: {accuracy}\n"
             f"Precision: {precision}\n"
             f"Recall: {recall}\n"
             f"F1 Score: {f1}\n"
-            f"ROC AUC Score: {roc_auc}\n"
+            f"ROC AUC Score: {roc_auc}"
         )
 
     def visualize_confusion_matrix(self) -> None:
@@ -203,6 +187,7 @@ class ModelEvaluator:
         plt.show()
         logging.info("Confusion matrix visualized.")
 
+
 class ModelManager:
     """
     A class that manages the saving, loading, and prediction of a machine learning model.
@@ -212,13 +197,13 @@ class ModelManager:
         model (InferenceSession): The loaded model.
 
     Methods:
-        save_model(model, x_train) -> bool: Saves the model as an ONNX file.
-        load_model() -> bool: Loads the model from the saved ONNX file.
-        get_prediction(data) -> int: Makes a prediction using the loaded model.
-        get_model() -> InferenceSession: Returns the loaded model.
+        save_model: Saves the model as an ONNX file.
+        load_model: Loads the model from the saved ONNX file.
+        get_prediction: Makes a prediction using the loaded model.
+        get_model: Returns the loaded model.
     """
 
-    def __init__(self, model_path) -> None:
+    def __init__(self, model_path: str) -> None:
         """
         Initializes a new instance of the ModelManager class.
 
@@ -227,8 +212,8 @@ class ModelManager:
         """
         self.model_path = model_path
         self.model = None
-    
-    def save_model(self, model, x_train) -> bool:
+
+    def save_model(self, model: RandomForestClassifier, x_train) -> bool:
         """
         Saves the model as an ONNX file.
 
@@ -249,7 +234,7 @@ class ModelManager:
             return False
         logging.info("Model saved.")
         return True
-    
+
     def load_model(self) -> bool:
         """
         Loads the model from the saved ONNX file.
@@ -261,12 +246,13 @@ class ModelManager:
         try:
             with open(self.model_path, "rb") as f:
                 self.model = InferenceSession(f.read())
-        except:
+        except Exception as e:
+            logging.exception(e)
             logging.info("Model not found.")
             return False
         logging.info("Model loaded.")
         return True
-    
+
     def get_prediction(self, data) -> int:
         """
         Makes a prediction using the loaded model.
@@ -285,7 +271,7 @@ class ModelManager:
             return None
         logging.info(f"Prediction: {prediction}")
         return prediction
-    
+
     def get_model(self) -> InferenceSession:
         """
         Returns the loaded model.
@@ -294,7 +280,7 @@ class ModelManager:
             InferenceSession: The loaded model.
         """
         return self.model
-    
+
 
 def main():
     """
@@ -304,7 +290,7 @@ def main():
     data_processor = DataProcessor("./creditcard_2023.csv", test_split=0.2)
     x_train, x_test, y_train, y_test = data_processor.process_data()
     model_manager = ModelManager("./model.onnx")
-    
+
     if not model_manager.load_model():
         detector = ModelTrainer(x_train, y_train)
         model = detector.train_model()
@@ -313,11 +299,11 @@ def main():
     else:
         model_manager.get_prediction(x_test[0:1])
         model = model_manager.get_model()
-    
+
     evaluator = ModelEvaluator(model, x_test, y_test)
     evaluator.evaluate_model()
     evaluator.visualize_confusion_matrix()
-    
+
     pred = model_manager.get_prediction(x_test[0:1])[0]
     actual = y_test.iloc[0]
     print(f"Prediction: {pred} Actual: {actual}")
