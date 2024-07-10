@@ -1,5 +1,6 @@
 import logging
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.metrics import (
@@ -169,23 +170,18 @@ class ModelEvaluator:
             f"ROC AUC Score: {roc_auc}"
         )
 
-    def visualize_confusion_matrix(self) -> None:
+    def visualize_confusion_matrix(self) -> np.ndarray:
         """
         Visualizes the confusion matrix of the model's predictions.
 
-        Plots a heatmap of the confusion matrix using seaborn.
+        Returns:
+            np.ndarray: The confusion matrix.
         """
         logging.info("Visualizing confusion matrix...")
         y_pred = self.model.run(None, {"X": self.x_test})[0]
         cm = confusion_matrix(self.y_test, y_pred)
-
-        plt.figure(figsize=(8, 6))
-        sns.heatmap(cm, annot=True, fmt="d", cmap="Blues")
-        plt.title("Confusion Matrix")
-        plt.xlabel("Predicted Label")
-        plt.ylabel("True Label")
-        plt.show()
         logging.info("Confusion matrix visualized.")
+        return cm
 
 
 class ModelManager:
@@ -302,11 +298,24 @@ def main():
 
     evaluator = ModelEvaluator(model, x_test, y_test)
     evaluator.evaluate_model()
-    evaluator.visualize_confusion_matrix()
+    # Visualize the confusion matrix
+    cm = evaluator.visualize_confusion_matrix()
+    sns.heatmap(cm, annot=True, fmt="d", cmap="Blues")
+    plt.xlabel("Predicted labels")
+    plt.ylabel("True labels")
+    plt.show()
 
-    pred = model_manager.get_prediction(x_test[0:1])[0]
+
+    print("Predictions:")
+    pred1 = model_manager.get_prediction(x_test[0:1])[0]
     actual = y_test.iloc[0]
-    print(f"Prediction: {pred} Actual: {actual}")
+    print(f"Prediction 1: {pred1} Actual: {actual}")
+    pred2 = model_manager.get_prediction(x_test[1:2])[0]
+    actual2 = y_test.iloc[1]
+    print(f"Prediction 2: {pred2} Actual: {actual2}")
+    pred3 = model_manager.get_prediction(x_test[2:3])[0]
+    actual3 = y_test.iloc[2]
+    print(f"Prediction 3: {pred3} Actual: {actual3}")
 
 
 if __name__ == "__main__":
