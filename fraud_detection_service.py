@@ -1,11 +1,12 @@
 from fraud_detection_pipeline import (
-    DataProcessor, ModelTrainer, ModelEvaluator, ModelManager
+    DataProcessor, ModelTrainer, ModelEvaluator, ModelManager, ModelType
 )
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import logging
+import os
 
 
 class CreditCard:
@@ -38,8 +39,9 @@ class FraudDetectionService:
         credit_card (CreditCard): An instance of the CreditCard class.
     """
 
-    def __init__(self, model_path: str) -> None:
-        self.model_manager = ModelManager(model_path)
+    def __init__(self, model_path: str, modeltype: ModelType) -> None:
+        self.model_path = model_path
+        self.model_manager = ModelManager(self.model_path)
         self.data_processor = DataProcessor("./creditcard_2023.csv", test_split=0.2)
         (
             self.x_train,
@@ -48,17 +50,21 @@ class FraudDetectionService:
             self.y_test
         ) = self.data_processor.process_data()
 
-        self.model_trainer = ModelTrainer(self.x_train, self.y_train)
+        self.model_trainer = ModelTrainer(self.x_train, self.y_train, modeltype)
         self.load_model()
         self.model_evaluator = ModelEvaluator(self.model, self.x_test, self.y_test)
         self.credit_card = CreditCard()
 
     def load_model(self) -> None:
-        if not self.model_manager.load_model():
+        if not os.path.exists(self.model_path):
+            logging.info("Model not found. Training a new model...")
             self.model = self.model_trainer.train_model()
             self.model_manager.save_model(self.model, self.x_train)
+            logging.info("Model trained and loaded successfully!")
         else:
+            self.model_manager.load_model()
             self.model = self.model_manager.get_model()
+            logging.info("Model loaded successfully!")
 
     def evaluate_model(self) -> None:
         self.model_evaluator.evaluate_model()

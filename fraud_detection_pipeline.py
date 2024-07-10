@@ -1,3 +1,4 @@
+from enum import Enum
 import logging
 import pandas as pd
 import numpy as np
@@ -7,13 +8,69 @@ from sklearn.metrics import (
     confusion_matrix, accuracy_score, precision_score, recall_score, 
     f1_score, roc_auc_score
 )
-from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from skl2onnx import to_onnx
 from onnxruntime import InferenceSession
 
+class ModelType(Enum):
+    RandomForest = 1
+    NeuralNetwork = 2
+    XGBoost = 3
+    GBC = 4
 
+class Model:
+    def __init__(self, modeltype: ModelType):
+        self.modeltype = modeltype
+        self.model = self.initialize_model()
+
+    def initialize_model(self):
+        if self.modeltype == ModelType.RandomForest:
+            
+            # Only import modules if the model type is RandomForest
+            from sklearn.ensemble import RandomForestClassifier
+                        
+            return RandomForestClassifier(n_estimators=50, random_state=42, n_jobs=-1)
+        elif self.modeltype == ModelType.NeuralNetwork:
+            
+            # Only import modules if the model type is NeuralNetwork
+            from tensorflow.keras.models import Sequential
+            from tensorflow.keras.layers import Dense, Dropout
+            from tensorflow.keras.optimizers import Adam
+            
+            
+            model = Sequential()
+            model.add(Dense(64, input_dim=30, activation='relu'))
+            model.add(Dropout(0.2))  # Dropout layer to prevent overfitting
+            model.add(Dense(32, activation='relu'))  # Additional hidden layer
+            model.add(Dropout(0.2))  # Another Dropout layer
+            model.add(Dense(1, activation='sigmoid'))
+            model.output_names = ['output']
+            optimizer = Adam(learning_rate=0.001)
+            model.compile(loss='binary_crossentropy', optimizer=optimizer, metrics=['accuracy'])
+            return model
+        elif self.modeltype == ModelType.XGBoost:
+            
+            # Only import modules if the model type is XGBoost
+            from xgboost import XGBClassifier
+            
+            return XGBClassifier(use_label_encoder=False, eval_metric='logloss')
+        elif self.modeltype == ModelType.GBC:
+            
+            # Only import modules if the model type is GBC
+            from sklearn.ensemble import GradientBoostingClassifier
+            
+            return GradientBoostingClassifier(n_estimators=50, learning_rate=0.1, max_depth=2, random_state=42, verbose=1)
+        else:
+            raise ValueError("Unsupported model type")
+        
+    def get_model(self):
+        return self.model
+    
+    def train_model(self, x_train, y_train):
+        if self.modeltype == ModelType.NeuralNetwork:
+            self.model.fit(x_train, y_train, epochs=5, batch_size=256)
+        else:
+            self.model.fit(x_train, y_train)
 class DataProcessor:
     """
     A class that processes data for fraud detection pipeline.
@@ -102,12 +159,13 @@ class ModelTrainer:
         train_model: Trains the machine learning model.
     """
 
-    def __init__(self, x_train, y_train) -> None:
+    def __init__(self, x_train, y_train, modeltype: ModelType) -> None:
         self.model = None
         self.x_train = x_train
         self.y_train = y_train
+        self.modeltype = modeltype
 
-    def train_model(self, n_estimators: int = 50, random_state: int = 42) -> RandomForestClassifier:
+    def train_model(self) -> Model:
         """
         Trains the machine learning model.
 
@@ -119,10 +177,8 @@ class ModelTrainer:
             RandomForestClassifier: The trained random forest classifier model.
         """
         logging.info("Training model, this may take a while...")
-        self.model = RandomForestClassifier(
-            n_estimators=n_estimators, random_state=random_state
-        )
-        self.model.fit(self.x_train, self.y_train)
+        self.model = Model(self.modeltype)
+        self.model.train_model(self.x_train, self.y_train)
         logging.info("Model trained.")
         return self.model
 
@@ -154,7 +210,10 @@ class ModelEvaluator:
         Prints the accuracy, precision, recall, F1 score, and ROC AUC score of the model.
         """
         logging.info("Evaluating model...")
-        y_pred = self.model.run(None, {"X": self.x_test})[0]
+        # Ensure the input data is of type float32
+        self.x_test = self.x_test.astype(np.float32)
+        output = self.model.run(None, {"X": self.x_test})[0]
+        y_pred = np.where(output > 0.5, 1, 0).astype(int)
         accuracy = accuracy_score(self.y_test, y_pred)
         precision = precision_score(self.y_test, y_pred)
         recall = recall_score(self.y_test, y_pred)
@@ -178,7 +237,10 @@ class ModelEvaluator:
             np.ndarray: The confusion matrix.
         """
         logging.info("Visualizing confusion matrix...")
-        y_pred = self.model.run(None, {"X": self.x_test})[0]
+        # Ensure the input data is of type float32
+        self.x_test = self.x_test.astype(np.float32)
+        output = self.model.run(None, {"X": self.x_test})[0]
+        y_pred = np.where(output > 0.5, 1, 0).astype(int)
         cm = confusion_matrix(self.y_test, y_pred)
         logging.info("Confusion matrix visualized.")
         return cm
@@ -209,7 +271,7 @@ class ModelManager:
         self.model_path = model_path
         self.model = None
 
-    def save_model(self, model: RandomForestClassifier, x_train) -> bool:
+    def save_model(self, model: Model, x_train) -> bool:
         """
         Saves the model as an ONNX file.
 
@@ -220,8 +282,26 @@ class ModelManager:
         Returns:
             bool: True if the model is successfully saved, False otherwise.
         """
+        # Import necessary modules based on the model type
+        from skl2onnx import convert_sklearn
+        from onnxmltools import convert_xgboost
+        import tf2onnx
+        from tensorflow import TensorSpec, float32
+        from skl2onnx.common.data_types import FloatTensorType
+        
         logging.info("Saving model...")
-        onnx_model = to_onnx(model, x_train)
+        try:
+            if model.modeltype == ModelType.NeuralNetwork:
+                input_signature = [TensorSpec(shape=[None, 30], dtype=float32, name="X")]
+                onnx_model, _ = tf2onnx.convert.from_keras(model.get_model(), input_signature=input_signature)
+            elif model.modeltype == ModelType.RandomForest or model.modeltype == ModelType.GBC:
+                initial_types = [("X", FloatTensorType([None, 30]))]
+                onnx_model = convert_sklearn(model.get_model(), initial_types=initial_types)
+            elif model.modeltype == ModelType.XGBoost:
+                onnx_model = convert_xgboost(model.get_model(), initial_types=[("X", FloatTensorType([None, 30]))])
+        except Exception as e:
+            logging.exception(e)
+            return False
         try:
             with open(self.model_path, "wb") as f:
                 f.write(onnx_model.SerializeToString())
@@ -261,7 +341,10 @@ class ModelManager:
         """
         logging.info("Predicting...")
         try:
-            prediction = self.model.run(None, {"X": data})[0]
+            # Ensure the input data is of type float32
+            data = data.astype(np.float32)
+            output = self.model.run(None, {"X": data})[0]
+            prediction = np.where(output > 0.5, 1, 0).astype(int)
         except Exception as e:
             logging.exception(e)
             return None
