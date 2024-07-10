@@ -11,6 +11,7 @@ from sklearn.metrics import (
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from onnxruntime import InferenceSession
+from onnx import ModelProto
 
 class ModelType(Enum):
     RandomForest = 1
@@ -23,15 +24,13 @@ class Model:
         self.modeltype = modeltype
         self.model = self.initialize_model()
 
-    def initialize_model(self):
+    def initialize_model(self) -> object:
         if self.modeltype == ModelType.RandomForest:
-            
             # Only import modules if the model type is RandomForest
             from sklearn.ensemble import RandomForestClassifier
                         
             return RandomForestClassifier(n_estimators=50, random_state=42, n_jobs=-1)
         elif self.modeltype == ModelType.NeuralNetwork:
-            
             # Only import modules if the model type is NeuralNetwork
             from tensorflow.keras.models import Sequential
             from tensorflow.keras.layers import Dense, Dropout
@@ -47,15 +46,14 @@ class Model:
             model.output_names = ['output']
             optimizer = Adam(learning_rate=0.001)
             model.compile(loss='binary_crossentropy', optimizer=optimizer, metrics=['accuracy'])
+            
             return model
         elif self.modeltype == ModelType.XGBoost:
-            
             # Only import modules if the model type is XGBoost
             from xgboost import XGBClassifier
             
             return XGBClassifier(use_label_encoder=False, eval_metric='logloss')
         elif self.modeltype == ModelType.GBC:
-            
             # Only import modules if the model type is GBC
             from sklearn.ensemble import GradientBoostingClassifier
             
@@ -63,14 +61,42 @@ class Model:
         else:
             raise ValueError("Unsupported model type")
         
-    def get_model(self):
+    def get_model(self) -> object:
         return self.model
     
-    def train_model(self, x_train, y_train):
+    def train_model(self, x_train, y_train) -> None:
         if self.modeltype == ModelType.NeuralNetwork:
             self.model.fit(x_train, y_train, epochs=5, batch_size=256)
         else:
             self.model.fit(x_train, y_train)
+    
+    def convert_to_onnx(self) -> ModelProto:
+        # Import necessary modules based on the model type
+        from skl2onnx import convert_sklearn
+        from onnxmltools import convert_xgboost
+        import tf2onnx
+        from tensorflow import TensorSpec, float32
+        from skl2onnx.common.data_types import FloatTensorType
+        
+        try:
+            if self.modeltype == ModelType.NeuralNetwork:
+                input_signature = [TensorSpec(shape=[None, 30], dtype=float32, name="X")]
+                onnx_model, _ = tf2onnx.convert.from_keras(self.model, input_signature=input_signature)
+                
+            elif self.modeltype == ModelType.RandomForest or self.modeltype == ModelType.GBC:
+                initial_types = [("X", FloatTensorType([None, 30]))]
+                onnx_model = convert_sklearn(self.model, initial_types=initial_types)
+                
+            elif self.modeltype == ModelType.XGBoost:
+                onnx_model = convert_xgboost(self.model, initial_types=[("X", FloatTensorType([None, 30]))])
+                
+            else:
+                raise ValueError("Unsupported model type")
+            
+            return onnx_model
+        except Exception as e:
+            logging.exception(e)
+            return None
 class DataProcessor:
     """
     A class that processes data for fraud detection pipeline.
@@ -298,7 +324,7 @@ class ModelManager:
         self.model_path = model_path
         self.model = None
 
-    def save_model(self, model: Model, x_train) -> bool:
+    def save_model(self, model: Model) -> bool:
         """
         Saves the model as an ONNX file.
 
@@ -309,23 +335,9 @@ class ModelManager:
         Returns:
             bool: True if the model is successfully saved, False otherwise.
         """
-        # Import necessary modules based on the model type
-        from skl2onnx import convert_sklearn
-        from onnxmltools import convert_xgboost
-        import tf2onnx
-        from tensorflow import TensorSpec, float32
-        from skl2onnx.common.data_types import FloatTensorType
-        
         logging.info("Saving model...")
         try:
-            if model.modeltype == ModelType.NeuralNetwork:
-                input_signature = [TensorSpec(shape=[None, 30], dtype=float32, name="X")]
-                onnx_model, _ = tf2onnx.convert.from_keras(model.get_model(), input_signature=input_signature)
-            elif model.modeltype == ModelType.RandomForest or model.modeltype == ModelType.GBC:
-                initial_types = [("X", FloatTensorType([None, 30]))]
-                onnx_model = convert_sklearn(model.get_model(), initial_types=initial_types)
-            elif model.modeltype == ModelType.XGBoost:
-                onnx_model = convert_xgboost(model.get_model(), initial_types=[("X", FloatTensorType([None, 30]))])
+            onnx_model = model.convert_to_onnx()
         except Exception as e:
             logging.exception(e)
             return False
