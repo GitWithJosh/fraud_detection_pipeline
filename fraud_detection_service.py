@@ -3,6 +3,8 @@ from fraud_detection_pipeline import (
 )
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
 import logging
 
 
@@ -60,6 +62,15 @@ class FraudDetectionService:
 
     def evaluate_model(self) -> None:
         self.model_evaluator.evaluate_model()
+    
+    def visualize_confusion_matrix(self, figsize=(8, 6)):
+        confusion_array = self.model_evaluator.visualize_confusion_matrix()
+        fig, ax = plt.subplots(figsize=figsize)
+        sns.heatmap(confusion_array, annot=True, ax=ax)
+        ax.set_title('Confusion Matrix')
+        ax.set_xlabel('Predicted Labels')
+        ax.set_ylabel('True Labels')
+        return fig
 
     def add_transaction_and_evaluate(self, transaction_data: dict) -> int:
         transaction_df = pd.DataFrame([transaction_data])
