@@ -68,6 +68,9 @@ class FraudDetectionService:
 
     def evaluate_model(self) -> None:
         self.model_evaluator.evaluate_model()
+
+    def get_model_metrics(self) -> dict:
+        return self.model_evaluator.get_evaluation_metrics()
     
     def visualize_confusion_matrix(self, figsize=(8, 6)):
         confusion_array = self.model_evaluator.visualize_confusion_matrix()

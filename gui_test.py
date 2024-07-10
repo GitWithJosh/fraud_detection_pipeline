@@ -83,16 +83,22 @@ class StreamlitApp:
             st.write(f"Transaction ID: {transaction_data.get('id', 'N/A')} | Prediction: {'Fraudulent' if prediction == 1 else 'Not Fraudulent'} | Actual: {'Fraudulent' if actual == 1 else 'Not Fraudulent'}")
 
     def display_confusion_matrix(self, cm_figure):
-        st.subheader("Confusion Matrix")
-        buf = BytesIO()
-        cm_figure.savefig(buf, format="png")
-        st.image(buf)
+        # Display confusion matrix in dropdown expander
+        st.subheader("Model performance")
+        with st.expander("Show Model Performance"):
+            st.write("Model performance metrics")
+            for metric, value in self.fds.get_model_metrics().items():
+                st.write(f"{metric}: {value}")
+            st.write("Confusion Matrix")
+            buf = BytesIO()
+            cm_figure.savefig(buf, format="png")
+            st.image(buf)
         
     def display_logs(self):
         with st.expander("Show Logs"):
             for message in self.log_handler.log_messages:
                 st.text(message)
-            
+
 
 if __name__ == "__main__":
     app = StreamlitApp()
