@@ -32,12 +32,6 @@ class FraudDetectionService:
     Attributes:
         model_manager (ModelManager): An instance of the ModelManager class.
         data_processor (DataProcessor): An instance of the DataProcessor class.
-        x_train (numpy.ndarray): Training features.
-        x_test (numpy.ndarray): Testing features.
-        y_train (numpy.ndarray): Training labels.
-        y_test (numpy.ndarray): Testing labels.
-        model_trainer (ModelTrainer): An instance of the ModelTrainer class.
-        model (object): A trained model.
         model_evaluator (ModelEvaluator): An instance of the ModelEvaluator class.
         credit_card (CreditCard): An instance of the CreditCard class.
     """
@@ -72,29 +66,19 @@ class FraudDetectionService:
         self.credit_card.add_transaction(transaction_df.iloc[0])
 
         # Prepare input data for prediction
-        input_data = {
-            'X': transaction_df.drop(columns=['Class']).values.astype('double')
-        }
+        input_data = self.data_processor.scaler.transform(transaction_df.drop(columns=['Class']))
 
         # Predict fraud for the added transaction
         prediction = self.get_prediction(input_data)
         return prediction
 
-    def get_prediction(self, data: dict) -> int:
-        # Ensure input data is in the expected format
-        if isinstance(data, dict):
-            input_data = data.get('X')  # Extract 'X' from the dictionary
-            
-            # Convert input_data to double if it's float
-            if input_data.dtype == np.float32:
-                input_data = input_data.astype(np.float64)
-
-            prediction = self.model_manager.get_prediction(input_data)
-        else:
-            raise ValueError("Input data must be provided as a dictionary.")
-
-        return prediction
-
+    def get_prediction(self, data: np.ndarray) -> int:
+        try:
+            prediction = self.model_manager.get_prediction(data.reshape(1, -1))[0]
+            return prediction
+        except Exception as e:
+            logging.error(f"Error during prediction: {str(e)}")
+            return -1
 
 if __name__ == "__main__":
     # Test the FraudDetectionService class
