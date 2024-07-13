@@ -17,7 +17,6 @@ class StreamlitApp:
     def __init__(self):
         
         logging.basicConfig(level=logging.INFO)
-        log_stream = StringIO
         self.log_handler = StreamlitLogHandler()
         logging.getLogger().addHandler(self.log_handler)
         
@@ -26,18 +25,25 @@ class StreamlitApp:
         
         st.subheader("Choose Model to use")
         
+        # Initialize session state variables
+        if "model" not in st.session_state:
+            st.session_state.model = None
+            self.fds = None
+        if "selected_model" not in st.session_state:
+            st.session_state.selected_model = "Select Model"
+        
         self.selected_model = st.selectbox("Model", ["Select Model", "Random Forest", "XGBoost", "Neural Network", "Gradient Boosting Classifier"])
         
+        # Load model if selected model has changed, otherwise use the existing model in session state
+        if self.selected_model != st.session_state.selected_model and self.selected_model != "Select Model":
+            self.load_model()
+            st.session_state.selected_model = self.selected_model
+            st.session_state.model = self.fds
+        else:
+            self.fds = st.session_state.model
+            self.selected_model = st.session_state.selected_model
+            
         self.display_logs()
-        with st.spinner("Loading model..."):
-            if self.selected_model == "Random Forest":
-                self.fds = FraudDetectionService("models/randomforest.onnx", modeltype=ModelType.RandomForest)
-            elif self.selected_model == "XGBoost":
-                self.fds = FraudDetectionService("models/xgboost.onnx", modeltype=ModelType.XGBoost)
-            elif self.selected_model == "Neural Network":
-                self.fds = FraudDetectionService("models/neuralnetwork.onnx", modeltype=ModelType.NeuralNetwork)
-            elif self.selected_model == "Gradient Boosting Classifier":
-                self.fds = FraudDetectionService("models/gbc.onnx", modeltype=ModelType.GBC)
         
         if self.selected_model != "Select Model":
             st.subheader("Upload a CSV file to predict fraud in transactions")
@@ -58,7 +64,20 @@ class StreamlitApp:
                 self.display_results(transactions_df, predictions)
                 self.display_confusion_matrix(cm_figure)
             
-    def predict_transactions(self):
+    def load_model(self):
+        with st.spinner("Loading model..."):
+            if self.selected_model == "Random Forest":
+                self.fds = FraudDetectionService("models/randomforest.onnx", modeltype=ModelType.RandomForest)
+            elif self.selected_model == "XGBoost":
+                self.fds = FraudDetectionService("models/xgboost.onnx", modeltype=ModelType.XGBoost)
+            elif self.selected_model == "Neural Network":
+                self.fds = FraudDetectionService("models/neuralnetwork.onnx", modeltype=ModelType.NeuralNetwork)
+            elif self.selected_model == "Gradient Boosting Classifier":
+                self.fds = FraudDetectionService("models/gbc.onnx", modeltype=ModelType.GBC)
+            else:
+                raise ValueError("Invalid model selected")
+        
+    def predict_transactions(self):    
         transactions_df = pd.read_csv(self.uploaded_file)
         predictions = []
 
@@ -102,4 +121,3 @@ class StreamlitApp:
 
 if __name__ == "__main__":
     app = StreamlitApp()
-    app.display_logs()
