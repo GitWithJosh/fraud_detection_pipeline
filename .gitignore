@@ -5,3 +5,4 @@ creditcard_2023.csv
 *.svg
 *.pyc
 *.DS_Store
+/venv/
