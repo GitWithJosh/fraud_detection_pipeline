@@ -1,6 +1,6 @@
 import logging
 
-from src.pipeline.models import Model, ModelType
+from .models import Model, ModelType
 
 class ModelTrainer:
     """

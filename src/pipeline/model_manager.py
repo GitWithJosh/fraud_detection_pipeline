@@ -3,7 +3,7 @@ import logging
 import numpy as np
 from onnxruntime import InferenceSession
 
-from src.pipeline.models import Model
+from .models import Model
 
 
 class ModelManager:
