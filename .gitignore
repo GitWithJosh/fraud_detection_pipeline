@@ -4,3 +4,4 @@ creditcard_2023.csv
 *.jpeg
 *.svg
 *.pyc
+*.DS_Store
