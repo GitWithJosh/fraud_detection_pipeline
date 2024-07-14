@@ -1,15 +1,16 @@
+import logging
+import os
+
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-import logging
-import os
 
-from pipeline.model_manager import ModelManager
-from pipeline.data_processor import DataProcessor
-from pipeline.model_trainer import ModelTrainer
-from pipeline.model_evaluator import ModelEvaluator
-from pipeline.models import ModelType
+from src.pipeline.model_manager import ModelManager
+from src.pipeline.data_processor import DataProcessor
+from src.pipeline.model_trainer import ModelTrainer
+from src.pipeline.model_evaluator import ModelEvaluator
+from src.pipeline.models import ModelType
 
 class CreditCard:
     """

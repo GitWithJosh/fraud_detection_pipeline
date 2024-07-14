@@ -1,9 +1,11 @@
+import logging
 from io import BytesIO
+
 import streamlit as st
 import pandas as pd
-from fraud_detection_service import FraudDetectionService
-from pipeline.models import ModelType
-import logging
+
+from src.fraud_detection_service import FraudDetectionService
+from src.pipeline.models import ModelType
 
 class StreamlitLogHandler(logging.Handler):
     def __init__(self) -> None:

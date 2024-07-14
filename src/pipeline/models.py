@@ -1,4 +1,5 @@
 from enum import Enum
+
 from onnx import ModelProto
 from tensorflow import TensorSpec, float32
 from skl2onnx.common.data_types import FloatTensorType
