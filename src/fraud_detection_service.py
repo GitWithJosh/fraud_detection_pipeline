@@ -1,6 +1,3 @@
-from fraud_detection_pipeline import (
-    DataProcessor, ModelTrainer, ModelEvaluator, ModelManager, ModelType
-)
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -8,6 +5,11 @@ import seaborn as sns
 import logging
 import os
 
+from pipeline.model_manager import ModelManager
+from pipeline.data_processor import DataProcessor
+from pipeline.model_trainer import ModelTrainer
+from pipeline.model_evaluator import ModelEvaluator
+from pipeline.models import ModelType
 
 class CreditCard:
     """
@@ -42,7 +44,8 @@ class FraudDetectionService:
     def __init__(self, model_path: str, modeltype: ModelType) -> None:
         self.model_path = model_path
         self.model_manager = ModelManager(self.model_path)
-        self.data_processor = DataProcessor("./creditcard_2023.csv", test_split=0.2)
+        data_path = os.path.join(os.getcwd(), "datasets", "creditcard_2023.csv")
+        self.data_processor = DataProcessor(data_path, test_split=0.2)
         (
             self.x_train,
             self.x_test,

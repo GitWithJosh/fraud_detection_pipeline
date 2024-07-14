@@ -1,8 +1,8 @@
-from io import BytesIO, StringIO
+from io import BytesIO
 import streamlit as st
 import pandas as pd
 from fraud_detection_service import FraudDetectionService
-from fraud_detection_pipeline import ModelType
+from pipeline.models import ModelType
 import logging
 
 class StreamlitLogHandler(logging.Handler):
