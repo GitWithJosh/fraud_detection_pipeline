@@ -1,7 +1,6 @@
 from enum import Enum
 
 from onnx import ModelProto
-from tensorflow import TensorSpec, float32
 from skl2onnx.common.data_types import FloatTensorType
 
 class ModelType(Enum):
@@ -95,9 +94,10 @@ class Model:
         return RandomForestClassifier(n_estimators=50, random_state=42, n_jobs=-1)
 
     def _init_neural_network(self):
-        from tensorflow.keras.models import Sequential
-        from tensorflow.keras.layers import Dense, Dropout
-        from tensorflow.keras.optimizers import Adam
+        # Ignore type checking for TensorFlow imports cause by bug in TensorFlow 2.6.2
+        from tensorflow.keras.models import Sequential # type: ignore
+        from tensorflow.keras.layers import Dense, Dropout # type: ignore
+        from tensorflow.keras.optimizers import Adam # type: ignore
 
         model = Sequential([
             Dense(64, input_dim=30, activation='relu'),
@@ -119,6 +119,7 @@ class Model:
 
     # Private methods for ONNX conversion
     def _convert_neural_network_to_onnx(self):
+        from tensorflow import TensorSpec, float32
         import tf2onnx
         input_signature = [TensorSpec(shape=[None, 30], dtype=float32, name="X")]
         onnx_model, _ = tf2onnx.convert.from_keras(self.model, input_signature=input_signature)
