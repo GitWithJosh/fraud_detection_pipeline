@@ -1,6 +1,6 @@
 import logging
 
-from .models import Model, ModelType
+from .models import Model, ModelType, RandomForest, NeuralNetwork, XGBoost, GBC
 
 class ModelTrainer:
     """
@@ -37,7 +37,15 @@ class ModelTrainer:
             RandomForestClassifier: The trained random forest classifier model.
         """
         logging.info("Training model, this may take a while...")
-        self.model = Model(self.modeltype)
+        if self.modeltype == ModelType.RandomForest:
+            self.model = RandomForest()
+        elif self.modeltype == ModelType.NeuralNetwork:
+            self.model = NeuralNetwork()
+        elif self.modeltype == ModelType.XGBoost:
+            self.model = XGBoost()
+        elif self.modeltype == ModelType.GBC:
+            self.model = GBC()
+        
         self.model.train_model(self.x_train, self.y_train)
         logging.info("Model trained.")
         return self.model

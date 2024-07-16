@@ -63,7 +63,8 @@ class FraudDetectionService:
         if not os.path.exists(self.model_path):
             logging.info("Model not found. Training a new model...")
             self.model = self.model_trainer.train_model()
-            self.model_manager.save_model(self.model, self.x_train)
+            self.model_manager.save_model(self.model)
+            self.model = self.model_manager.get_model()
             logging.info("Model trained and loaded successfully!")
         else:
             self.model_manager.load_model()
