@@ -20,8 +20,9 @@ class CreditCard:
         transactions (list): A list of transactions.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, id) -> None:
         self.transactions = []
+        self.id = id
 
     def add_transaction(self, transaction: dict) -> None:
         self.transactions.append(transaction)
@@ -57,7 +58,6 @@ class FraudDetectionService:
         self.model_trainer = ModelTrainer(self.x_train, self.y_train, modeltype)
         self.load_model()
         self.model_evaluator = ModelEvaluator(self.model, self.x_test, self.y_test)
-        self.credit_card = CreditCard()
 
     def load_model(self) -> None:
         if not os.path.exists(self.model_path):
@@ -86,9 +86,9 @@ class FraudDetectionService:
         ax.set_ylabel('True Labels')
         return fig
 
-    def add_transaction_and_evaluate(self, transaction_data: dict) -> int:
+    def add_transaction_and_evaluate(self, transaction_data: dict, card: CreditCard) -> int:
         transaction_df = pd.DataFrame([transaction_data])
-        self.credit_card.add_transaction(transaction_df.iloc[0])
+        card.add_transaction(transaction_df.iloc[0])
 
         # Prepare input data for prediction
         input_data = self.data_processor.scaler.transform(transaction_df.drop(columns=['Class']))
