@@ -119,9 +119,13 @@ class StreamlitApp:
 
         st.subheader("Fraud Prediction Results")
         with st.expander("Show Predictions", expanded=True):
-            for transaction_data, prediction in zip(transactions_df.to_dict('records'), predictions):
-                actual = transaction_data.get('Class', 'Unknown')
-                st.write(f"Transaction ID: {transaction_data.get('id', 'N/A')} | Prediction: {'Fraudulent' if prediction == 1 else 'Not Fraudulent'} | Actual: {'Fraudulent' if actual == 1 else 'Not Fraudulent'}")
+            st.subheader("Transaction Predictions")
+            transaction_table = pd.DataFrame({
+            "Transaction ID": [transaction_data.get('id', 'N/A') for transaction_data in transactions_df.to_dict('records')],
+            "Prediction": ['Fraudulent' if prediction == 1 else 'Not Fraudulent' for prediction in predictions],
+            "Actual": ['Fraudulent' if transaction_data.get('Class', 'Unknown') == 1 else 'Not Fraudulent' for transaction_data in transactions_df.to_dict('records')]
+            })
+            st.dataframe(transaction_table)
 
     def display_confusion_matrix(self, cm_figure):
         # Display confusion matrix in dropdown expander
