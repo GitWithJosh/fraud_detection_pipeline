@@ -43,11 +43,16 @@ class FraudDetectionService:
         credit_card (CreditCard): An instance of the CreditCard class.
     """
 
-    def __init__(self, model_path: str, modeltype: ModelType) -> None:
+    def __init__(self, model_path: str, modeltype: ModelType, data_path = None) -> None:
         self.model_path = model_path
         self.model_manager = ModelManager(self.model_path)
-        data_path = os.path.join(os.getcwd(), "datasets", "creditcard_2023.csv")
-        self.data_processor = DataProcessor(data_path, test_split=0.2)
+
+        if data_path is None: 
+            self.data_path = os.path.join(os.getcwd(), "datasets", "creditcard_2023.csv")
+        else:
+            self.data_path = os.path.join(os.getcwd(), "datasets", data_path)
+        
+        self.data_processor = DataProcessor(self.data_path, test_split=0.2)
         (
             self.x_train,
             self.x_test,

@@ -33,26 +33,40 @@ class StreamlitApp:
         st.subheader("Choose Model to use")
         
         # Initialize session state variables
+        if "page" not in st.session_state:
+            st.session_state.page = "main"
         if "model" not in st.session_state:
             st.session_state.model = None
             self.fds = None
-        if "selected_model" not in st.session_state:
-            st.session_state.selected_model = "Select Model"
+        if "selected_model_main" not in st.session_state:
+            st.session_state.selected_model_main = "Select Model"
+        if 'model_names' not in st.session_state:
+            st.session_state.model_names = {}      
         
-        self.selected_model = st.selectbox("Model", ["Select Model", "Random Forest", "XGBoost", "Neural Network", "Gradient Boosting Classifier"])
+        available_models = ["Select Model", "Random Forest", "XGBoost", "Neural Network", "Gradient Boosting Classifier"]
+        for model in list(st.session_state.model_names.keys()):
+            available_models.append(model)
+        self.selected_model = st.selectbox("Model", available_models, key="main_page")
+        
+        if st.session_state.page == "train":
+            st.session_state.page = "main"
+            st.session_state.selected_model_main = "Select Model"
+            st.session_state.model = None
+            self.fds = None
         
         # Load model if selected model has changed, otherwise use the existing model in session state
-        if self.selected_model != st.session_state.selected_model and self.selected_model != "Select Model":
+        if self.selected_model != st.session_state.selected_model_main and self.selected_model != "Select Model":
             self.load_model()
-            st.session_state.selected_model = self.selected_model
+            st.session_state.selected_model_main = self.selected_model
             st.session_state.model = self.fds
         else:
             self.fds = st.session_state.model
-            self.selected_model = st.session_state.selected_model
+            self.selected_model = st.session_state.selected_model_main
             
         self.display_logs()
         
-        if self.selected_model != "Select Model":
+        if st.session_state.selected_model_main != "Select Model" and self.fds != None:
+            print(self.selected_model)
             st.button("Add Credit Card", on_click=self.add_credit_card)
             
             for card in reversed(st.session_state.cards):
@@ -76,7 +90,8 @@ class StreamlitApp:
             elif self.selected_model == "Gradient Boosting Classifier":
                 self.fds = FraudDetectionService("models/gbc.onnx", modeltype=ModelType.GBC)
             else:
-                raise ValueError("Invalid model selected")
+                path = f"models/{self.selected_model}.onnx"
+                self.fds = FraudDetectionService(path, modeltype= st.session_state.model_names[self.selected_model])
     
     def add_credit_card(self):
         """
