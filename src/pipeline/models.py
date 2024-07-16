@@ -97,11 +97,12 @@ class NeuralNetwork(Model):
     def initialize_model(self) -> object:
         # Ignore type checking for TensorFlow imports cause by bug in TensorFlow 2.6.2
         from tensorflow.keras.models import Sequential # type: ignore
-        from tensorflow.keras.layers import Dense, Dropout # type: ignore
+        from tensorflow.keras.layers import Dense, Dropout, Input # type: ignore
         from tensorflow.keras.optimizers import Adam # type: ignore
 
         model = Sequential([
-            Dense(64, input_dim=30, activation='relu'),
+            Input(shape=(30,)),
+            Dense(64, activation='relu'),
             Dropout(0.2),
             Dense(32, activation='relu'),
             Dropout(0.2),
@@ -117,6 +118,7 @@ class NeuralNetwork(Model):
         from tensorflow import TensorSpec, float32
         import tf2onnx
         input_signature = [TensorSpec(shape=[None, 30], dtype=float32, name="X")]
+        self.model.output_names = ['output']
         onnx_model, _ = tf2onnx.convert.from_keras(self.model, input_signature=input_signature)
         return onnx_model
 
