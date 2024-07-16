@@ -17,3 +17,7 @@ Please download the [Credit Card Fraud Detection Dataset](https://www.kaggle.com
    ```bash
    streamlit run src/streamlit_app.py
    ```
+
+## Presentation
+
+The presentation related to this project can be found in the `docs` folder.
