@@ -22,7 +22,7 @@ class StreamlitApp:
         self.log_handler = StreamlitLogHandler()
         logging.getLogger().addHandler(self.log_handler)
         
-        st.set_page_config(layout="wide")
+        st.set_page_config(layout="wide", page_title="Fraud Detection Service")
         
         if 'cards' not in st.session_state:
             st.session_state.cards = []
@@ -118,9 +118,10 @@ class StreamlitApp:
             st.write(transactions_df)
 
         st.subheader("Fraud Prediction Results")
-        for transaction_data, prediction in zip(transactions_df.to_dict('records'), predictions):
-            actual = transaction_data.get('Class', 'Unknown')
-            st.write(f"Transaction ID: {transaction_data.get('id', 'N/A')} | Prediction: {'Fraudulent' if prediction == 1 else 'Not Fraudulent'} | Actual: {'Fraudulent' if actual == 1 else 'Not Fraudulent'}")
+        with st.expander("Show Predictions", expanded=True):
+            for transaction_data, prediction in zip(transactions_df.to_dict('records'), predictions):
+                actual = transaction_data.get('Class', 'Unknown')
+                st.write(f"Transaction ID: {transaction_data.get('id', 'N/A')} | Prediction: {'Fraudulent' if prediction == 1 else 'Not Fraudulent'} | Actual: {'Fraudulent' if actual == 1 else 'Not Fraudulent'}")
 
     def display_confusion_matrix(self, cm_figure):
         # Display confusion matrix in dropdown expander
